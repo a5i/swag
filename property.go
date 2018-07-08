@@ -25,7 +25,12 @@ func parseFieldSelectorExpr(astTypeSelectorExpr *ast.SelectorExpr) propertyName 
 
 	// Supprt UUID
 	if "UUID" == strings.ToUpper(astTypeSelectorExpr.Sel.Name) {
-		return propertyName{SchemaType: "string", ArrayType: "string"}
+		return propertyName{SchemaType: "uuid", ArrayType: "uuid"}
+	}
+
+	// Supprt ULID
+	if "ULID" == strings.ToUpper(astTypeSelectorExpr.Sel.Name) {
+		return propertyName{SchemaType: "uuid", ArrayType: "uuid"}
 	}
 
 	// Supprt shopspring/decimal

@@ -5,7 +5,7 @@
 package docs
 
 import (
-	"github.com/swaggo/swag"
+	"github.com/a5i/swag"
 )
 
 var doc = `{
