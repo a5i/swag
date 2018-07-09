@@ -461,6 +461,10 @@ func (operation *Operation) ParseResponseComment(commentLine string) error {
 		}
 	}
 
+	if code == http.StatusNoContent && len(response.Description) == 0 {
+		response.Description = "successful"
+	}
+
 	operation.Responses.StatusCodeResponses[code] = response
 
 	return nil
@@ -489,6 +493,10 @@ func (operation *Operation) ParseEmptyResponseComment(commentLine string) error 
 		}
 	}
 
+	if code == http.StatusNoContent && len(response.Description) == 0 {
+		response.Description = "successful"
+	}
+
 	operation.Responses.StatusCodeResponses[code] = response
 
 	return nil
@@ -508,6 +516,10 @@ func (operation *Operation) ParseEmptyResponseOnly(commentLine string) error {
 				StatusCodeResponses: make(map[int]spec.Response),
 			},
 		}
+	}
+
+	if code == http.StatusNoContent && len(response.Description) == 0 {
+		response.Description = "successful"
 	}
 
 	operation.Responses.StatusCodeResponses[code] = response
