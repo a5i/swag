@@ -471,7 +471,25 @@ func (parser *Parser) parseStruct(pkgName string, field *ast.Field) (properties 
 		}
 	} else if structField.schemaType == "array" { // array field type
 		// if defined -- ref it
-		if _, ok := parser.TypeDefinitions[pkgName][structField.arrayType]; ok { // user type in array
+		if strings.HasPrefix(structField.arrayType, "#/definitions") {
+			ref := jsonreference.MustCreateRef(structField.arrayType)
+			properties[structField.name] = spec.Schema{
+				SchemaProps: spec.SchemaProps{
+					Type:        []string{structField.schemaType},
+					Description: desc,
+					Items: &spec.SchemaOrArray{
+						Schema: &spec.Schema{
+							SchemaProps: spec.SchemaProps{
+								Ref: spec.Ref{
+									Ref: ref,
+								},
+							},
+						},
+					},
+				},
+			}
+
+		} else if _, ok := parser.TypeDefinitions[pkgName][structField.arrayType]; ok { // user type in array
 			parser.ParseDefinition(pkgName, parser.TypeDefinitions[pkgName][structField.arrayType], structField.arrayType)
 			properties[structField.name] = spec.Schema{
 				SchemaProps: spec.SchemaProps{

@@ -71,8 +71,17 @@ func getPropertyName(field *ast.Field) propertyName {
 	}
 	if astTypeArray, ok := field.Type.(*ast.ArrayType); ok { // if array
 		if astTypeArrayExpr, ok := astTypeArray.Elt.(*ast.StarExpr); ok {
-			if astTypeArrayIdent := astTypeArrayExpr.X.(*ast.Ident); ok {
+			if astTypeArrayIdent, ok := astTypeArrayExpr.X.(*ast.Ident); ok {
 				name := astTypeArrayIdent.Name
+				return propertyName{SchemaType: "array", ArrayType: name}
+			}
+			if astSelectorExpr, ok := astTypeArrayExpr.X.(*ast.SelectorExpr); ok {
+				name := astSelectorExpr.Sel.Name
+				if astTypeArrayIdent, ok := astSelectorExpr.X.(*ast.Ident); ok {
+					ref := astTypeArrayIdent.Name + "." + name
+					name = "#/definitions/" + ref
+				}
+				//schemeType := TransToValidSchemeType(name)
 				return propertyName{SchemaType: "array", ArrayType: name}
 			}
 		}
