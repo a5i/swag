@@ -188,6 +188,15 @@ func TestParseSimpleApi(t *testing.T) {
                             "$ref": "#/definitions/web.APIError"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
                     "404": {
                         "description": "Can not find ID",
                         "schema": {
@@ -367,6 +376,20 @@ func TestParseSimpleApi(t *testing.T) {
         }
     },
     "definitions": {
+        "cross.Cross": {
+            "type": "object",
+            "properties": {
+                "Array": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "String": {
+                    "type": "string"
+                }
+            }
+        },
         "web.APIError": {
             "type": "object",
             "properties": {
@@ -521,6 +544,16 @@ func TestParseSimpleApi(t *testing.T) {
                 },
                 "Status": {
                     "type": "boolean"
+                },
+                "cross": {
+                    "type": "object",
+                    "$ref": "#/definitions/cross.Cross"
+                },
+                "crosses": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/cross.Cross"
+                    }
                 }
             }
         },
@@ -902,6 +935,15 @@ func TestParseSimpleApi_ForSnakecase(t *testing.T) {
                                 }
                             }
                         }
+                    }
+                },
+                "custom_string": {
+                    "type": "string"
+                },
+                "custom_string_arr": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
                     }
                 },
                 "data": {
@@ -1591,7 +1633,7 @@ func TestParseStructComment(t *testing.T) {
                     "type": "string"
                 },
                 "error": {
-                    "description": "Error an Api error\n",
+                    "description": "Error an Api error",
                     "type": "string"
                 }
             }
@@ -1600,11 +1642,11 @@ func TestParseStructComment(t *testing.T) {
             "type": "object",
             "properties": {
                 "data": {
-                    "description": "Post data\n",
+                    "description": "Post data",
                     "type": "object",
                     "properties": {
                         "name": {
-                            "description": "Post tag\n",
+                            "description": "Post tag",
                             "type": "array",
                             "items": {
                                 "type": "string"
@@ -1618,7 +1660,7 @@ func TestParseStructComment(t *testing.T) {
                     "example": 1
                 },
                 "name": {
-                    "description": "Post name\n",
+                    "description": "Post name",
                     "type": "string",
                     "example": "poti"
                 }
@@ -1659,6 +1701,160 @@ func TestParsePetApi(t *testing.T) {
     "paths": {}
 }`
 	searchDir := "testdata/pet"
+	mainAPIFile := "main.go"
+	p := New()
+	p.ParseAPI(searchDir, mainAPIFile)
+
+	b, _ := json.MarshalIndent(p.swagger, "", "    ")
+	assert.Equal(t, expected, string(b))
+}
+
+func TestParseModelNotUnderRoot(t *testing.T) {
+	expected := `{
+    "swagger": "2.0",
+    "info": {
+        "description": "This is a sample server Petstore server.",
+        "title": "Swagger Example API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support",
+            "url": "http://www.swagger.io/support",
+            "email": "support@swagger.io"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
+    },
+    "host": "petstore.swagger.io",
+    "basePath": "/v2",
+    "paths": {
+        "/file/upload": {
+            "post": {
+                "description": "Upload file",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Upload file",
+                "operationId": "file.upload",
+                "parameters": [
+                    {
+                        "description": "Foo to create",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/data.Foo"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "ok",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/testapi/get-string-by-int/{some_id}": {
+            "get": {
+                "description": "get string by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Add a new pet to the store",
+                "operationId": "get-string-by-int",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "Some ID",
+                        "name": "some_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "ok",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/data.Foo"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "data.Foo": {
+            "type": "object",
+            "properties": {
+                "field1": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        },
+        "BasicAuth": {
+            "type": "basic"
+        },
+        "OAuth2AccessCode": {
+            "type": "oauth2",
+            "flow": "accessCode",
+            "authorizationUrl": "https://example.com/oauth/authorize",
+            "tokenUrl": "https://example.com/oauth/token",
+            "scopes": {
+                "admin": " Grants read and write access to administrative information"
+            }
+        },
+        "OAuth2Application": {
+            "type": "oauth2",
+            "flow": "application",
+            "tokenUrl": "https://example.com/oauth/token",
+            "scopes": {
+                "admin": " Grants read and write access to administrative information",
+                "write": " Grants write access"
+            }
+        },
+        "OAuth2Implicit": {
+            "type": "oauth2",
+            "flow": "implicit",
+            "authorizationUrl": "https://example.com/oauth/authorize",
+            "scopes": {
+                "admin": " Grants read and write access to administrative information",
+                "write": " Grants write access"
+            }
+        },
+        "OAuth2Password": {
+            "type": "oauth2",
+            "flow": "password",
+            "tokenUrl": "https://example.com/oauth/token",
+            "scopes": {
+                "admin": " Grants read and write access to administrative information",
+                "read": " Grants read access",
+                "write": " Grants write access"
+            }
+        }
+    }
+}`
+	searchDir := "testdata/model_not_under_root/cmd"
 	mainAPIFile := "main.go"
 	p := New()
 	p.ParseAPI(searchDir, mainAPIFile)
