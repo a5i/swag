@@ -3,6 +3,7 @@ package swag
 import (
 	"fmt"
 	"go/ast"
+	"log"
 	"strings"
 )
 
@@ -45,6 +46,9 @@ func parseFieldSelectorExpr(astTypeSelectorExpr *ast.SelectorExpr) propertyName 
 // getPropertyName returns the string value for the given field if it exists, otherwise it panics.
 // allowedValues: array, boolean, integer, null, number, object, string
 func getPropertyName(field *ast.Field) propertyName {
+	if field.Pos() == 621 {
+		log.Println("hhhhh")
+	}
 	if astTypeSelectorExpr, ok := field.Type.(*ast.SelectorExpr); ok {
 		return parseFieldSelectorExpr(astTypeSelectorExpr)
 	}
@@ -84,6 +88,9 @@ func getPropertyName(field *ast.Field) propertyName {
 				//schemeType := TransToValidSchemeType(name)
 				return propertyName{SchemaType: "array", ArrayType: name}
 			}
+		}
+		if _, ok := astTypeArray.Elt.(*ast.InterfaceType); ok { // if interface{}
+			return propertyName{SchemaType: "array", ArrayType: "object"}
 		}
 		str := fmt.Sprintf("%s", astTypeArray.Elt)
 		return propertyName{SchemaType: "array", ArrayType: str}
