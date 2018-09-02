@@ -45,6 +45,7 @@ type Parser struct {
 	registerTypes map[string]*ast.TypeSpec
 
 	PropNamingStrategy string
+	definitions        []string
 }
 
 // New creates a new Parser with default properties.
@@ -83,6 +84,17 @@ func (parser *Parser) ParseAPI(searchDir string, mainAPIFile string) {
 
 	for _, astFile := range parser.files {
 		parser.ParseRouterAPIInfo(astFile)
+	}
+
+	for _, schemaType := range parser.definitions {
+		refSplit := strings.Split(schemaType, ".")
+		if len(refSplit) == 2 {
+			pkgName := refSplit[0]
+			typeName := refSplit[1]
+			if typeSpec, ok := parser.TypeDefinitions[pkgName][typeName]; ok {
+				parser.registerTypes[schemaType] = typeSpec
+			}
+		}
 	}
 
 	parser.ParseDefinitions()
@@ -130,6 +142,8 @@ func (parser *Parser) ParseGeneralAPIInfo(mainAPIFile string) {
 					parser.swagger.BasePath = strings.TrimSpace(commentLine[len(attribute):])
 				case "@schemes":
 					parser.swagger.Schemes = GetSchemes(commentLine)
+				case "@definitions":
+					parser.definitions = getDefinitions(commentLine)
 				}
 			}
 
@@ -277,6 +291,12 @@ func isExistsScope(scope string) bool {
 
 // GetSchemes parses swagger schemes for given commentLine
 func GetSchemes(commentLine string) []string {
+	attribute := strings.ToLower(strings.Split(commentLine, " ")[0])
+	return strings.Split(strings.TrimSpace(commentLine[len(attribute):]), " ")
+}
+
+// getDefinitions parses swagger definitions for given commentLine
+func getDefinitions(commentLine string) []string {
 	attribute := strings.ToLower(strings.Split(commentLine, " ")[0])
 	return strings.Split(strings.TrimSpace(commentLine[len(attribute):]), " ")
 }
