@@ -24,8 +24,8 @@ type Operation struct {
 	HTTPMethod string
 	Path       string
 	spec.Operation
-
-	parser *Parser
+	inDescription bool
+	parser        *Parser
 }
 
 // NewOperation creates a new Operation with default properties.
@@ -50,26 +50,34 @@ func (operation *Operation) ParseComment(comment string, astFile *ast.File) erro
 	lineRemainder := strings.TrimSpace(commentLine[len(attribute):])
 	switch strings.ToLower(attribute) {
 	case "@description":
+		operation.inDescription = true
 		operation.Description = lineRemainder
 	case "@summary":
+		operation.inDescription = false
 		operation.Summary = lineRemainder
 	case "@id":
+		operation.inDescription = false
 		operation.ID = lineRemainder
 	case "@tags":
+		operation.inDescription = false
 		operation.ParseTagsComment(lineRemainder)
 	case "@accept":
+		operation.inDescription = false
 		if err := operation.ParseAcceptComment(lineRemainder); err != nil {
 			return err
 		}
 	case "@produce":
+		operation.inDescription = false
 		if err := operation.ParseProduceComment(lineRemainder); err != nil {
 			return err
 		}
 	case "@param":
+		operation.inDescription = false
 		if err := operation.ParseParamComment(lineRemainder, astFile); err != nil {
 			return err
 		}
 	case "@success", "@failure":
+		operation.inDescription = false
 		if err := operation.ParseResponseComment(lineRemainder, astFile); err != nil {
 			if err := operation.ParseEmptyResponseComment(lineRemainder); err != nil {
 				if err := operation.ParseEmptyResponseOnly(lineRemainder); err != nil {
@@ -79,12 +87,18 @@ func (operation *Operation) ParseComment(comment string, astFile *ast.File) erro
 		}
 
 	case "@router":
+		operation.inDescription = false
 		if err := operation.ParseRouterComment(strings.TrimSpace(commentLine[len(attribute):])); err != nil {
 			return err
 		}
 	case "@security":
+		operation.inDescription = false
 		if err := operation.ParseSecurityComment(strings.TrimSpace(commentLine[len(attribute):])); err != nil {
 			return err
+		}
+	default:
+		if operation.inDescription {
+			operation.Description = operation.Description + "\n" + commentLine
 		}
 	}
 	return nil
