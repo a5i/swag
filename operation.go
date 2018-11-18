@@ -335,6 +335,8 @@ func (operation *Operation) ParseAcceptComment(commentLine string) error {
 			operation.Consumes = append(operation.Consumes, "application/json")
 		case "xml", "text/xml":
 			operation.Consumes = append(operation.Consumes, "text/xml")
+		case "csv", "text/csv":
+			operation.Consumes = append(operation.Consumes, "text/csv")
 		case "plain", "text/plain":
 			operation.Consumes = append(operation.Consumes, "text/plain")
 		case "html", "text/html":
@@ -371,6 +373,8 @@ func (operation *Operation) ParseProduceComment(commentLine string) error {
 			operation.Produces = append(operation.Produces, "application/json")
 		case "xml", "text/xml":
 			operation.Produces = append(operation.Produces, "text/xml")
+		case "csv", "text/csv":
+			operation.Produces = append(operation.Produces, "text/csv")
 		case "plain", "text/plain":
 			operation.Produces = append(operation.Produces, "text/plain")
 		case "html", "text/html":
